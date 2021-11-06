@@ -4,7 +4,7 @@ import {juggler} from '@loopback/repository';
 const config = {
   name: 'mongoDS',
   connector: 'mongodb',
-  url: `mongodb+srv://${process.env.MONGO_DB_USER}:${process.env.MONGO_DB_PASSWORD}@cluster0.csrtf.mongodb.net/${process.env.MONGO_DB_DATABASE}?retryWrites=true&w=majority`,
+  url: `mongodb+srv://vilmarcabanero:entropiya2020@cluster0.csrtf.mongodb.net/task?retryWrites=true&w=majority`,
   host: '',
   port: 0,
   user: '',

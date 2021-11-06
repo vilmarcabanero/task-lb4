@@ -10,6 +10,13 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
 
+import {AuthenticationComponent} from '@loopback/authentication';
+import {
+  JWTAuthenticationComponent,
+  UserServiceBindings,
+} from '@loopback/authentication-jwt';
+import {MongoDsDataSource} from './datasources';
+
 export {ApplicationConfig};
 
 export class TaskApiLb4Application extends BootMixin(
@@ -17,6 +24,13 @@ export class TaskApiLb4Application extends BootMixin(
 ) {
   constructor(options: ApplicationConfig = {}) {
     super(options);
+
+    // Mount authentication system
+    this.component(AuthenticationComponent);
+    // Mount jwt component
+    this.component(JWTAuthenticationComponent);
+    // Bind datasource
+    this.dataSource(MongoDsDataSource, UserServiceBindings.DATASOURCE_NAME);
 
     // Set up the custom sequence
     this.sequence(MySequence);

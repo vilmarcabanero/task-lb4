@@ -2,6 +2,14 @@ import {Entity, model, property} from '@loopback/repository';
 
 @model()
 export class Todo extends Entity {
+
+  @property({
+    type: 'string',
+    id: true,
+    generated: true,
+  })
+  _id?: string;
+
   @property({
     type: 'string',
     required: true,
@@ -19,13 +27,6 @@ export class Todo extends Entity {
     default: false,
   })
   complete?: boolean;
-
-  @property({
-    type: 'string',
-    id: true,
-    generated: true,
-  })
-  _id?: string;
 
   @property({
     type: 'date',

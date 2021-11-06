@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {Count, Filter, repository} from '@loopback/repository';
 import {del, get, param, patch, post, requestBody} from '@loopback/rest';
 import {Todo} from '../models';
@@ -9,6 +10,7 @@ export class TodoController {
     public todoRepository: TodoRepository,
   ) {}
 
+  @authenticate('jwt')
   @get('/todos')
   async getAllTodos(
     @param.filter(Todo) filter?: Filter<Todo>,

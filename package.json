@@ -35,7 +35,9 @@
     "start": "node -r source-map-support/register .",
     "dev": "tsc-watch --target es2017 --outDir ./dist --onSuccess \"node .\"",
     "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
-    "rebuild": "npm run clean && npm run build"
+    "rebuild": "npm run clean && npm run build",
+    "start:prod": "node dist/index.js",
+    "postinstall": "npm run build"
   },
   "repository": {
     "type": "git",

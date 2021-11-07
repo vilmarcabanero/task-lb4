@@ -18,7 +18,7 @@ import {repository} from '@loopback/repository';
 import {get, post, requestBody, SchemaObject} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
 import {genSalt, hash} from 'bcryptjs';
-import _ from 'lodash';
+// import _ from 'lodash';
 
 const CredentialsSchema: SchemaObject = {
   type: 'object',
@@ -54,13 +54,26 @@ export class UserController {
     @repository(UserRepository) protected userRepository: UserRepository,
   ) {}
 
-  @post('/users/login')
+  @post('/auth/login')
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
   ): Promise<object> {
-    // ensure the user exists, and the password is correct
-
     try {
+      const filter = {
+        where: {
+          email: credentials.email,
+        },
+      };
+
+      const foundUser = await this.userRepository.findOne(filter);
+
+      if (!foundUser) {
+        return {
+          status: 'error',
+          message: `${credentials.email} is not yet registered.`,
+        };
+      }
+
       const user = await this.userService.verifyCredentials(credentials);
 
       // convert a User object into a UserProfile object (reduced set of properties)
@@ -75,7 +88,7 @@ export class UserController {
     } catch (error) {
       return {
         status: 'error',
-        error,
+        message: 'Invalid password.',
       };
     }
   }
@@ -92,12 +105,12 @@ export class UserController {
     return foundUser;
   }
 
-  @post('/signup')
+  @post('/auth/register')
   async signUp(
     @requestBody()
     newUserRequest: NewUserRequest,
   ) {
-    const {email} = newUserRequest;
+    const {email, password} = newUserRequest;
     const [username] = email.split('@');
 
     const filter = {
@@ -115,14 +128,16 @@ export class UserController {
       };
     }
 
-    const password = await hash(newUserRequest.password, await genSalt());
+    const hashedPw = await hash(password, await genSalt());
     const savedUser = await this.userRepository.create({
       ...newUserRequest,
       username,
       password: undefined,
     });
 
-    await this.userRepository.userCredentials(savedUser.id).create({password});
+    await this.userRepository
+      .userCredentials(savedUser.id)
+      .create({password: hashedPw});
 
     return savedUser;
   }

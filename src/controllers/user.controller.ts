@@ -8,7 +8,7 @@ import {
   Credentials,
   MyUserService,
   TokenServiceBindings,
-  User,
+  // User,
   UserRepository,
   UserServiceBindings,
 } from '@loopback/authentication-jwt';
@@ -17,7 +17,7 @@ import {NewUserRequest} from '../models/user.model';
 import {repository} from '@loopback/repository';
 import {get, post, requestBody, SchemaObject} from '@loopback/rest';
 import {SecurityBindings, UserProfile} from '@loopback/security';
-import {genSalt, hash} from 'bcryptjs';
+import {genSalt, hash, compareSync} from 'bcryptjs';
 // import _ from 'lodash';
 
 const CredentialsSchema: SchemaObject = {
@@ -74,6 +74,18 @@ export class UserController {
         };
       }
 
+      const isPasswordCorrect = compareSync(
+        credentials.password,
+        foundUser.password,
+      );
+
+      if (!isPasswordCorrect) {
+        return {
+          status: 'error',
+          message: 'Invalid password.',
+        };
+      }
+
       const user = await this.userService.verifyCredentials(credentials);
 
       // convert a User object into a UserProfile object (reduced set of properties)
@@ -86,23 +98,23 @@ export class UserController {
         token,
       };
     } catch (error) {
-      return {
-        status: 'error',
-        message: 'Invalid password.',
-      };
+      return error;
     }
   }
 
   @authenticate('jwt')
-  @get('/who')
-  async whoAmI(
+  @get('/user')
+  async getUserDetails(
     @inject(SecurityBindings.USER)
     currentUserProfile: UserProfile,
-  ): Promise<User> {
+  ): Promise<object> {
     const userId = currentUserProfile.id;
     const foundUser = await this.userRepository.findById(userId);
-
-    return foundUser;
+    // console.log(this.user)
+    return {
+      ...foundUser,
+      password: undefined,
+    };
   }
 
   @post('/auth/register')
@@ -132,13 +144,24 @@ export class UserController {
     const savedUser = await this.userRepository.create({
       ...newUserRequest,
       username,
-      password: undefined,
+      password: hashedPw,
     });
 
     await this.userRepository
       .userCredentials(savedUser.id)
       .create({password: hashedPw});
 
-    return savedUser;
+      const user = await this.userService.verifyCredentials(newUserRequest);
+
+      // convert a User object into a UserProfile object (reduced set of properties)
+      const userProfile = this.userService.convertToUserProfile(user);
+
+      // create a JSON Web Token based on the user profile
+      const token = await this.jwtService.generateToken(userProfile);
+
+    return {
+      status: 'ok',
+      token: token,
+    };
   }
 }

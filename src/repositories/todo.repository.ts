@@ -12,20 +12,22 @@ export class TodoRepository extends DefaultCrudRepository<
     super(Todo, dataSource);
   }
 
-  async getActiveTodos() {
+  async getActiveTodos(userId: string) {
     const filter = {
       where: {
         isActive: true,
+        userId: userId,
       },
     };
 
     return this.find(filter);
   }
 
-  async getCompleteTodos() {
+  async getCompleteTodos(userId: string) {
     const filter = {
       where: {
         complete: true,
+        userId: userId,
       },
     };
 
@@ -40,8 +42,8 @@ export class TodoRepository extends DefaultCrudRepository<
     await this.updateById(id, {complete: false});
   }
 
-  async archiveCompleteTodolist() {
-    const where: Where<Todo> = {complete: true};
+  async archiveCompleteTodolist(userId: string) {
+    const where: Where<Todo> = {complete: true, userId: userId};
 
     return this.updateAll({isActive: false}, where);
   }

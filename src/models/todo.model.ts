@@ -2,7 +2,6 @@ import {Entity, model, property} from '@loopback/repository';
 
 @model()
 export class Todo extends Entity {
-
   @property({
     type: 'string',
     id: true,
@@ -29,6 +28,12 @@ export class Todo extends Entity {
   complete?: boolean;
 
   @property({
+    type: 'string',
+    required: true,
+  })
+  userId: string;
+
+  @property({
     type: 'date',
     default: new Date(),
   })
@@ -39,7 +44,6 @@ export class Todo extends Entity {
     default: new Date(),
   })
   updatedAt?: string;
-
 
   constructor(data?: Partial<Todo>) {
     super(data);

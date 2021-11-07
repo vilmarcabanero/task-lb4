@@ -3,14 +3,19 @@ import {Count, Filter, repository} from '@loopback/repository';
 import {del, get, param, patch, post, requestBody} from '@loopback/rest';
 import {Todo} from '../models';
 import {TodoRepository} from '../repositories';
-
+import {UserRepository} from '@loopback/authentication-jwt';
+import {SecurityBindings, UserProfile} from '@loopback/security';
+import {inject} from '@loopback/core';
+@authenticate('jwt')
 export class TodoController {
   constructor(
     @repository(TodoRepository)
     public todoRepository: TodoRepository,
+    @repository(UserRepository) protected userRepository: UserRepository,
+    @inject(SecurityBindings.USER, {optional: true})
+    public user: UserProfile,
   ) {}
 
-  @authenticate('jwt')
   @get('/todos')
   async getAllTodos(
     @param.filter(Todo) filter?: Filter<Todo>,
@@ -20,12 +25,12 @@ export class TodoController {
 
   @get('/todos/active')
   async getActiveTodos(): Promise<Todo[]> {
-    return this.todoRepository.getActiveTodos();
+    return this.todoRepository.getActiveTodos(this.user.id);
   }
 
   @get('/todos/complete')
   async getCompleteTodos(): Promise<Todo[]> {
-    return this.todoRepository.getCompleteTodos();
+    return this.todoRepository.getCompleteTodos(this.user.id);
   }
 
   @get('/todos/{id}')
@@ -34,8 +39,11 @@ export class TodoController {
   }
 
   @post('/todos')
-  async createTodo(@requestBody() todo: Todo): Promise<Todo> {
-    return this.todoRepository.create(todo);
+  async createTodo(@requestBody() todo: {
+    task: string,
+    userId: string,
+  }): Promise<object> {
+    return this.todoRepository.create({task: todo.task, userId: this.user.id});
   }
 
   @patch('/todos/{id}')
@@ -48,7 +56,7 @@ export class TodoController {
 
   @patch('/todos/archive')
   async archiveCompleteTodolist(): Promise<Count> {
-    return this.todoRepository.archiveCompleteTodolist();
+    return this.todoRepository.archiveCompleteTodolist(this.user.id);
   }
 
   @patch('/todos/complete/{id}')
